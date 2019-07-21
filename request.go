@@ -184,6 +184,10 @@ func (b *ReqBuilder) Do() *Response {
 		}
 	}
 
+	if host := b.headers.Get("Host"); host != "" {
+		req.Host = host
+	}
+
 	oldCheckRedirect := b.client.CheckRedirect
 
 	if b.noFollow {
