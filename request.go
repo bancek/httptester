@@ -12,16 +12,18 @@ import (
 )
 
 type ReqBuilder struct {
-	baseURL  string
-	url      string
-	method   string
-	query    url.Values
-	headers  http.Header
-	noFollow bool
-	body     io.Reader
-	statuses []int
-	client   *http.Client
-	onError  func(error)
+	baseURL       string
+	url           string
+	method        string
+	query         url.Values
+	headers       http.Header
+	noFollow      bool
+	body          io.Reader
+	statuses      []int
+	client        *http.Client
+	beforeRequest func(req *http.Request)
+	afterRequest  func(req *http.Request, res *http.Response, err error)
+	onError       func(error)
 }
 
 func NewReqBuilder(baseURL string, client *http.Client, onError func(error)) *ReqBuilder {
@@ -156,6 +158,16 @@ func (b *ReqBuilder) File(fieldName string, fileName string, reader io.Reader, e
 	return b.Body(r)
 }
 
+func (b *ReqBuilder) BeforeRequest(f func(req *http.Request)) *ReqBuilder {
+	b.beforeRequest = f
+	return b
+}
+
+func (b *ReqBuilder) AfterRequest(f func(req *http.Request, res *http.Response, err error)) *ReqBuilder {
+	b.afterRequest = f
+	return b
+}
+
 func (b *ReqBuilder) Do() *Response {
 	u, err := url.Parse(b.baseURL + b.url)
 	if err != nil {
@@ -196,7 +208,15 @@ func (b *ReqBuilder) Do() *Response {
 		}
 	}
 
+	if b.beforeRequest != nil {
+		b.beforeRequest(req)
+	}
+
 	res, err := b.client.Do(req)
+
+	if b.afterRequest != nil {
+		b.afterRequest(req, res, err)
+	}
 
 	b.client.CheckRedirect = oldCheckRedirect
 
