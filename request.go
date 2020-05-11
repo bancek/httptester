@@ -64,8 +64,16 @@ func (b *ReqBuilder) NoFollow() *ReqBuilder {
 }
 
 func (b *ReqBuilder) Q(args ...string) *ReqBuilder {
+	keys := map[string]bool{}
 	for i := 0; i < len(args)/2; i++ {
-		b.query.Set(args[i*2], args[i*2+1])
+		key := args[i*2]
+		value := args[i*2+1]
+		if _, ok := keys[key]; ok {
+			b.query.Add(key, value)
+		} else {
+			b.query.Set(key, value)
+		}
+		keys[key] = true
 	}
 	return b
 }
