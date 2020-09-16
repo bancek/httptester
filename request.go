@@ -166,6 +166,11 @@ func (b *ReqBuilder) File(fieldName string, fileName string, reader io.Reader, e
 	return b.Body(r)
 }
 
+func (b *ReqBuilder) OnError(f func(error)) *ReqBuilder {
+	b.onError = f
+	return b
+}
+
 func (b *ReqBuilder) BeforeRequest(f func(req *http.Request)) *ReqBuilder {
 	return b.BeforeWithRequest(func(req *http.Request) *http.Request {
 		f(req)
