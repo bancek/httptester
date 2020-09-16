@@ -21,7 +21,7 @@ type ReqBuilder struct {
 	body          io.Reader
 	statuses      []int
 	client        *http.Client
-	beforeRequest func(req *http.Request)
+	beforeRequest func(req *http.Request) *http.Request
 	afterRequest  func(req *http.Request, res *http.Response, err error)
 	onError       func(error)
 }
@@ -167,6 +167,13 @@ func (b *ReqBuilder) File(fieldName string, fileName string, reader io.Reader, e
 }
 
 func (b *ReqBuilder) BeforeRequest(f func(req *http.Request)) *ReqBuilder {
+	return b.BeforeWithRequest(func(req *http.Request) *http.Request {
+		f(req)
+		return req
+	})
+}
+
+func (b *ReqBuilder) BeforeWithRequest(f func(req *http.Request) *http.Request) *ReqBuilder {
 	b.beforeRequest = f
 	return b
 }
@@ -217,7 +224,7 @@ func (b *ReqBuilder) Do() *Response {
 	}
 
 	if b.beforeRequest != nil {
-		b.beforeRequest(req)
+		req = b.beforeRequest(req)
 	}
 
 	res, err := b.client.Do(req)
