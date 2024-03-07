@@ -195,14 +195,16 @@ func (b *ReqBuilder) Do() *Response {
 		return nil
 	}
 
-	q := u.Query()
-	for k, vs := range b.query {
-		for _, v := range vs {
-			q.Add(k, v)
+	if len(b.query) > 0 {
+		q := u.Query()
+		for k, vs := range b.query {
+			for _, v := range vs {
+				q.Add(k, v)
+			}
 		}
-	}
 
-	u.RawQuery = q.Encode()
+		u.RawQuery = q.Encode()
+	}
 
 	req, err := http.NewRequest(b.method, u.String(), b.body)
 	if err != nil {
