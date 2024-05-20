@@ -1,3 +1,3 @@
 module github.com/bancek/httptester
 
-go 1.13
+go 1.21
