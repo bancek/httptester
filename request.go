@@ -2,6 +2,7 @@ package httptester
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"encoding/json"
 	"io"
@@ -19,10 +20,10 @@ type ReqBuilder struct {
 	headers       http.Header
 	noFollow      bool
 	body          io.Reader
-	statuses      []int
 	client        *http.Client
 	beforeRequest func(req *http.Request) *http.Request
 	afterRequest  func(req *http.Request, res *http.Response, err error)
+	context       context.Context
 	onError       func(error)
 }
 
@@ -188,6 +189,11 @@ func (b *ReqBuilder) AfterRequest(f func(req *http.Request, res *http.Response, 
 	return b
 }
 
+func (b *ReqBuilder) Context(ctx context.Context) *ReqBuilder {
+	b.context = ctx
+	return b
+}
+
 func (b *ReqBuilder) Do() *Response {
 	u, err := url.Parse(b.baseURL + b.url)
 	if err != nil {
@@ -206,7 +212,12 @@ func (b *ReqBuilder) Do() *Response {
 		u.RawQuery = q.Encode()
 	}
 
-	req, err := http.NewRequest(b.method, u.String(), b.body)
+	ctx := b.context
+	if ctx == nil {
+		ctx = context.Background()
+	}
+
+	req, err := http.NewRequestWithContext(ctx, b.method, u.String(), b.body)
 	if err != nil {
 		b.onError(err)
 		return nil
