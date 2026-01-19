@@ -86,6 +86,10 @@ func (b *ReqBuilder) Header(args ...string) *ReqBuilder {
 	return b
 }
 
+func (b *ReqBuilder) ClientIP(ip string) *ReqBuilder {
+	return b.Header("X-Forwarded-For", ip)
+}
+
 func (b *ReqBuilder) Auth(auth string) *ReqBuilder {
 	return b.Header("Authorization", auth)
 }
